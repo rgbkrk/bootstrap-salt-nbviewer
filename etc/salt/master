@@ -1,0 +1,5 @@
+fileserver_backend:
+  - git
+
+gitfs_remotes:
+  - https://github.com/rgbkrk/salt-nbviewer.git
