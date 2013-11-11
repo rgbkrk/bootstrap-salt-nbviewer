@@ -7,7 +7,7 @@
 
 '''
 
-Bootstrapping the salt minions on Rackspace (using fabric rather than
+Bootstrapping salt minions on Rackspace (using fabric rather than
 salt-cloud).
 
 This is not the most effective way to do this, but it gets it done.
@@ -78,9 +78,17 @@ def master_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
 
 def fullstrap_master():
     bootstrap_salt_master()
+    install_curl()
     install_pip()
     install_gitpython()
     restart_master()
+
+def install_curl():
+    run("apt-get -y install curl")
+
+def apt_update():
+    run('apt-get -y upgrade')
+    run('apt-get -y update')
 
 def bootstrap_salt_master():
     '''
