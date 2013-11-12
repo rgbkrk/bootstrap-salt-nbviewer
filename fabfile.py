@@ -77,8 +77,9 @@ def master_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
     return master.accessIPv4
 
 def fullstrap_master():
-    bootstrap_salt_master()
+    apt_update()
     install_curl()
+    bootstrap_salt_master()
     install_pip()
     install_gitpython()
     restart_master()
