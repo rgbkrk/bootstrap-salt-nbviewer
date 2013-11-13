@@ -88,8 +88,8 @@ def install_curl():
     run("apt-get -y install curl")
 
 def apt_update():
-    run('apt-get -y upgrade')
     run('apt-get -y update')
+    run('apt-get -y upgrade')
 
 def bootstrap_salt_master():
     '''
