@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 '''
 
 Bootstrapping salt minions on Rackspace (using fabric rather than
