@@ -47,6 +47,8 @@ env.key_filename = os.path.expanduser("~/.ssh/id_rsa")
 def master_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
     '''
     Create a salt-master on Rackspace
+
+    Alternatively create the master using nova
     '''
 
     # Authenticate with Rackspace, use credential file
@@ -62,7 +64,7 @@ def master_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
     iter_os = ifilter(lambda img: "Ubuntu 12.04" in img.name, cs.images.list())
     ubu_image = iter_os.next()
 
-    master = cs.servers.create("master.cow", ubu_image.id, flavor_512,
+    master = cs.servers.create("master.ipython.org", ubu_image.id, flavor_512,
                                key_name=key_name)
 
     master = pyrax.utils.wait_for_build(master, verbose=True)
@@ -80,9 +82,11 @@ def fullstrap_master():
     install_gitpython()
     restart_master()
 
+@parallel
 def install_curl():
     run("apt-get -y install curl")
 
+@parallel
 def apt_update():
     run('apt-get -y update')
     run('apt-get -y upgrade')
@@ -134,8 +138,8 @@ def minions_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
 
     domain_template = "{0}{1:02d}.minion.{2}"
 
-    server_names = [domain_template.format(release_type, idx, "cow") for
-                    release_type in ("qa", "prod") for idx in xrange(1, 5)]
+    server_names = [domain_template.format(release_type, idx, "ipython.org") for
+                    release_type in ("qa", "prod") for idx in xrange(1, 3)]
 
     # Create homogenous minions (with names as above)
     # This hardcodes the key name to the one I'm using right now.
@@ -157,6 +161,8 @@ def fullstrap_minions(master):
 
     $ fab fullstrap_minions:master=127.0.0.1
     '''
+    apt_update()
+    install_curl()
     bootstrap_salt()
     point_minion_at_master(master)
     restart_minion()
