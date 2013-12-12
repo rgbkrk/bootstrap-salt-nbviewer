@@ -40,11 +40,15 @@ import pyrax
 env.user = 'root'
 env.key_filename = os.path.expanduser("~/.ssh/id_rsa")
 
+default_image = u'62df001e-87ee-407c-b042-6f4e13f5d7e1' # | Ubuntu 13.04 (Raring Ringtail) (PVHVM beta)
+default_flavor = u'performance1-4'
+
 ################################################################################
 # Master tools
 ################################################################################
 
-def master_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
+def master_up(key_name, credential_file="~/.rackspace_cloud_credentials",
+              image=default_image, flavor=default_flavor,region="IAD"):
     '''
     Create a salt-master on Rackspace
 
@@ -56,22 +60,19 @@ def master_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
     pyrax.set_credential_file(os.path.expanduser(credential_file))
 
     # Shorthand
-    cs = pyrax.cloudservers
+    cs = pyrax.connect_to_cloudservers(region=region)
 
-    # Building Ubuntu 12.04 boxes with 512 MB RAM
-    iter_flavors = ifilter(lambda flavor: flavor.ram == 512, cs.flavors.list())
-    flavor_512 = iter_flavors.next()
-    iter_os = ifilter(lambda img: "Ubuntu 12.04" in img.name, cs.images.list())
-    ubu_image = iter_os.next()
-
-    master = cs.servers.create("master.ipython.org", ubu_image.id, flavor_512,
+    master = cs.servers.create("master.iad.ipython.org", image, flavor,
                                key_name=key_name)
 
     master = pyrax.utils.wait_for_build(master, verbose=True)
 
     env.hosts = [master.accessIPv4]
 
+    print(master.networks)
+
     print("Master IP: {}".format(master.accessIPv4))
+
     return master.accessIPv4
 
 def fullstrap_master():
@@ -81,6 +82,7 @@ def fullstrap_master():
     install_pip()
     install_gitpython()
     restart_master()
+    run("apt-get -y install vim")
 
 @parallel
 def install_curl():
@@ -90,6 +92,7 @@ def install_curl():
 def apt_update():
     run('apt-get -y update')
     run('apt-get -y upgrade')
+    run('apt-get -y install vim') # Sneaking this in to make life better
 
 def bootstrap_salt_master():
     '''
@@ -115,7 +118,8 @@ def restart_master():
 # Minion tools
 ################################################################################
 
-def minions_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
+def minions_up(key_name, credential_file="~/.rackspace_cloud_credentials",
+               image=default_image, flavor=default_flavor, region="IAD"):
     '''
     Creates a specific build of machines and bootstraps salt.
 
@@ -128,23 +132,17 @@ def minions_up(key_name, credential_file="~/.rackspace_cloud_credentials"):
     pyrax.set_credential_file(os.path.expanduser(credential_file))
 
     # Shorthand
-    cs = pyrax.cloudservers
+    cs = pyrax.connect_to_cloudservers(region=region)
 
-    # Building Ubuntu 12.04 boxes with 512 MB RAM
-    iter_flavors = ifilter(lambda flavor: flavor.ram == 512, cs.flavors.list())
-    flavor_512 = iter_flavors.next()
-    iter_os = ifilter(lambda img: "Ubuntu 12.04" in img.name, cs.images.list())
-    ubu_image = iter_os.next()
-
-    domain_template = "{0}{1:02d}.minion.{2}"
+    domain_template = "{0}{1:02d}.iad.{2}"
 
     server_names = [domain_template.format(release_type, idx, "ipython.org") for
                     release_type in ("qa", "prod") for idx in xrange(1, 3)]
 
     # Create homogenous minions (with names as above)
     # This hardcodes the key name to the one I'm using right now.
-    minions = map(lambda name: cs.servers.create(name, ubu_image.id,
-                  flavor_512, key_name=key_name), server_names)
+    minions = map(lambda name: cs.servers.create(name, image,
+                  flavor, key_name=key_name), server_names)
 
     # Make sure all the minions are done before we move on to fabric runs
     minions = [pyrax.utils.wait_for_build(minion, verbose=True)
