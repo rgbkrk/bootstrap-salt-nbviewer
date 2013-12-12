@@ -39,6 +39,7 @@ import pyrax
 
 env.user = 'root'
 env.key_filename = os.path.expanduser("~/.ssh/id_rsa")
+env.forward_agent = True
 
 default_image = u'62df001e-87ee-407c-b042-6f4e13f5d7e1' # | Ubuntu 13.04 (Raring Ringtail) (PVHVM beta)
 default_flavor = u'performance1-4'
