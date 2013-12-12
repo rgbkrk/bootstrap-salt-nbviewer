@@ -92,7 +92,6 @@ def install_curl():
 def apt_update():
     run('apt-get -y update')
     run('apt-get -y upgrade')
-    run('apt-get -y install vim') # Sneaking this in to make life better
 
 def bootstrap_salt_master():
     '''
@@ -164,6 +163,7 @@ def fullstrap_minions(master):
     bootstrap_salt()
     point_minion_at_master(master)
     restart_minion()
+    run('apt-get -y install vim') # Sneaking this in to make life better
 
 
 @parallel
