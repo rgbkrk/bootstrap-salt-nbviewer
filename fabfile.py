@@ -77,6 +77,10 @@ def master_up(key_name, credential_file="~/.rackspace_cloud_credentials",
     return master.accessIPv4
 
 def fullstrap_master():
+    '''
+    Runs through apt_update, installing curl, using salt bootstrap (for
+    master), installs pip, gitpython, restarts master.
+    '''
     apt_update()
     install_curl()
     bootstrap_salt_master()
@@ -87,10 +91,16 @@ def fullstrap_master():
 
 @parallel
 def install_curl():
+    '''
+    Installs curl
+    '''
     run("apt-get -y install curl")
 
 @parallel
 def apt_update():
+    '''
+    Runs apt-get update and upgrade
+    '''
     run('apt-get -y update')
     run('apt-get -y upgrade')
 
@@ -101,6 +111,9 @@ def bootstrap_salt_master():
     run('curl -L http://bootstrap.saltstack.org | sudo sh -s -- -M -N git develop')
 
 def install_pip():
+    '''
+    Installs pip using the ez_setup script (from bitbucket.org/pypa/setuptools)
+    '''
     # Good pip
     run('wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py\
         -O - | python2.7')
@@ -108,10 +121,16 @@ def install_pip():
     https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python2.7')
 
 def install_gitpython():
+    '''
+    Installs gitpython and dependencies
+    '''
     run('apt-get install git')
     run('pip install GitPython==0.3.2.RC1 --upgrade')
 
 def restart_master():
+    '''
+    Restarts the salt master
+    '''
     run('service salt-master restart')
 
 ################################################################################
