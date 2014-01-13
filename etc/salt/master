@@ -2,4 +2,4 @@ fileserver_backend:
   - git
 
 gitfs_remotes:
-  - https://github.com/rgbkrk/salt-nbviewer.git
+  - https://github.com/ipython/salt-states-nbviewer.git
