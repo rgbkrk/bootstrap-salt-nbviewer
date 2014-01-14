@@ -49,7 +49,7 @@ default_layout = {
         "master":
             {"image": u'df27d481-63a5-40ca-8920-3d132ed643d9',
              "flavor": u'performance1-4',
-             "hostname": u'master'}
+             "hostname": u'master'},
         "minions": [ {"image": u'df27d481-63a5-40ca-8920-3d132ed643d9',
                       "flavor": u'performance1-8',
                       "hostname": name} for name in
