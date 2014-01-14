@@ -182,7 +182,7 @@ def minions_up(key_name, credential_file="~/.rackspace_cloud_credentials",
     for minion in layout["minions"]:
         minions.append(cs.servers.create(minion["hostname"],
                                          minion["image"],
-                                         minion["flavor"]
+                                         minion["flavor"],
                                          key_name=key_name))
 
     # Make sure all the minions are done before we move on to fabric runs
