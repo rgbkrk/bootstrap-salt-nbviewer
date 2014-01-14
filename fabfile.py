@@ -41,15 +41,34 @@ env.user = 'root'
 env.key_filename = os.path.expanduser("~/.ssh/id_rsa")
 env.forward_agent = True
 
-default_image = u'62df001e-87ee-407c-b042-6f4e13f5d7e1' # | Ubuntu 13.04 (Raring Ringtail) (PVHVM beta)
-default_flavor = u'performance1-4'
+#default_image = u'62df001e-87ee-407c-b042-6f4e13f5d7e1' # | Ubuntu 13.04
+default_image = u'df27d481-63a5-40ca-8920-3d132ed643d9' # Ubuntu 13.10
+default_flavor = u'performance1-8'
+
+default_layout = {
+        "master":
+            {"image": u'df27d481-63a5-40ca-8920-3d132ed643d9',
+             "flavor": u'performance1-4',
+             "hostname": u'master'}
+        "minions": [ {"image": u'df27d481-63a5-40ca-8920-3d132ed643d9',
+                      "flavor": u'performance1-8',
+                      "hostname": name} for name in
+                            ("qa01.nbviewer.ipython.org",
+                             "qa02.nbviewer.ipython.org",
+                             "prod01.nbviewer.ipython.org",
+                             "prod02.nbviewer.ipython.org")
+                   ]
+}
+
 
 ################################################################################
 # Master tools
 ################################################################################
 
 def master_up(key_name, credential_file="~/.rackspace_cloud_credentials",
-              image=default_image, flavor=default_flavor,region="IAD"):
+              image=default_layout["master"]["image"],
+              flavor=default_layout["master"]["flavor"],
+              region="IAD"):
     '''
     Create a salt-master on Rackspace
 
@@ -86,8 +105,13 @@ def fullstrap_master():
     bootstrap_salt_master()
     install_pip()
     install_gitpython()
+    place_master_configuration()
     restart_master()
     run("apt-get -y install vim")
+
+def place_master_configuration():
+    files.upload_template("etc/salt/master", "/etc/salt/master")
+    
 
 @parallel
 def install_curl():
@@ -138,7 +162,7 @@ def restart_master():
 ################################################################################
 
 def minions_up(key_name, credential_file="~/.rackspace_cloud_credentials",
-               image=default_image, flavor=default_flavor, region="IAD"):
+               layout=default_layout, region="IAD"):
     '''
     Creates a specific build of machines and bootstraps salt.
 
@@ -153,15 +177,13 @@ def minions_up(key_name, credential_file="~/.rackspace_cloud_credentials",
     # Shorthand
     cs = pyrax.connect_to_cloudservers(region=region)
 
-    domain_template = "{0}{1:02d}.iad.{2}"
+    minions = []
 
-    server_names = [domain_template.format(release_type, idx, "ipython.org") for
-                    release_type in ("qa", "prod") for idx in xrange(1, 3)]
-
-    # Create homogenous minions (with names as above)
-    # This hardcodes the key name to the one I'm using right now.
-    minions = map(lambda name: cs.servers.create(name, image,
-                  flavor, key_name=key_name), server_names)
+    for minion in layout["minions"]:
+        minions.append(cs.servers.create(minion["hostname"],
+                                         minion["image"],
+                                         minion["flavor"]
+                                         key_name=key_name))
 
     # Make sure all the minions are done before we move on to fabric runs
     minions = [pyrax.utils.wait_for_build(minion, verbose=True)
