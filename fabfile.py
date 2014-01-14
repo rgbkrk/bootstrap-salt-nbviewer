@@ -68,6 +68,7 @@ default_layout = {
 def master_up(key_name, credential_file="~/.rackspace_cloud_credentials",
               image=default_layout["master"]["image"],
               flavor=default_layout["master"]["flavor"],
+              name=default_layout["master"]["hostname"],
               region="IAD"):
     '''
     Create a salt-master on Rackspace
@@ -82,8 +83,7 @@ def master_up(key_name, credential_file="~/.rackspace_cloud_credentials",
     # Shorthand
     cs = pyrax.connect_to_cloudservers(region=region)
 
-    master = cs.servers.create("master.iad.ipython.org", image, flavor,
-                               key_name=key_name)
+    master = cs.servers.create(name, image, flavor, key_name=key_name)
 
     master = pyrax.utils.wait_for_build(master, verbose=True)
 
