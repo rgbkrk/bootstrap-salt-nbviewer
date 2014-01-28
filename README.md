@@ -3,6 +3,8 @@ bootstrap-salt-nbviewer
 
 Bootstrapping salt for nbviewer
 
+NOTE: This is not in use anymore, but is left as an example.
+
 # fabfile
 
 The fabric file bootstraps a salt master and salt minions on Rackspace.
